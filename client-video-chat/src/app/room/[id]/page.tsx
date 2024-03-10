@@ -104,35 +104,20 @@ export default function Room({ params }: { params: { id: string } }) {
   }, [peerInstance, users])
 
   useEffect(() => {
-    const handleDisconnect = () => {
-      if (peerId) {
-        socket.emit('leaveRoom', { roomId, peerId })
-      }
+    const handleBeforeUnload = () => {
+      socket.emit('leaveRoom', { roomId, peerId })
     }
 
-    window.addEventListener('unload', handleDisconnect)
+    window.addEventListener('beforeunload', handleBeforeUnload)
 
     return () => {
-      window.removeEventListener('unload', handleDisconnect)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [peerId])
+  }, [roomId, peerId])
 
-  if (isLoading)
-    return (
-      <div className="h-screen flex justify-center items-center">
-        Loading...
-      </div>
-    )
-  if (isError)
-    return (
-      <div className="h-screen flex justify-center items-center">
-        Something Broke!
-      </div>
-    )
-  if (!peerId)
-    return (
-      <div className="h-screen flex justify-center items-center">Not Id</div>
-    )
+  if (isLoading) return <div>Loading...</div>
+  if (isError) return <div>Something Broke!</div>
+  if (!peerId) return <div>Not Id</div>
 
   return (
     <div className="p-4 flex flex-col gap-4 items-center min-h-screen justify-center">
