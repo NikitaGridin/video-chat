@@ -105,29 +105,19 @@ export default function Room({ params }: { params: { id: string } }) {
   }, [peerInstance, users])
 
   useEffect(() => {
-    const handleUnload = () => {
-      disconnectFromRoom()
-    }
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        disconnectFromRoom()
+    const handleDisconnect = () => {
+      if (peerId) {
+        socket.emit('leaveRoom', { roomId, peerId })
       }
     }
 
-    const disconnectFromRoom = () => {
-      socket.emit('leaveRoom', { roomId, peerId })
-      socket.disconnect()
-    }
-
-    window.addEventListener('beforeunload', handleUnload)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('beforeunload', handleDisconnect)
 
     return () => {
-      window.removeEventListener('beforeunload', handleUnload)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      handleDisconnect() // Вызываем функцию отключения заранее
+      window.removeEventListener('beforeunload', handleDisconnect)
     }
-  }, [roomId, peerId])
+  }, [peerId])
 
   if (isLoading)
     return (
