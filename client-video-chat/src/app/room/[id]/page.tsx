@@ -74,20 +74,6 @@ export default function Room({ params }: { params: { id: string } }) {
   }, [peerId])
 
   useEffect(() => {
-    const handleUnload = async () => {
-      if (peerId) {
-        socket.emit('leaveRoom', { roomId, peerId })
-      }
-    }
-
-    window.addEventListener('unload', handleUnload)
-
-    return () => {
-      window.removeEventListener('unload', handleUnload)
-    }
-  }, [peerId])
-
-  useEffect(() => {
     const callToAll = async () => {
       if (peerInstance && users.length > 0) {
         const mediaStream = await navigator.mediaDevices.getUserMedia(
@@ -117,6 +103,34 @@ export default function Room({ params }: { params: { id: string } }) {
 
     callToAll()
   }, [peerInstance, users])
+
+  useEffect(() => {
+    const handleUnload = () => {
+      socket.emit('leaveRoom', { roomId, peerId })
+      socket.disconnect()
+    }
+
+    window.addEventListener('beforeunload', handleUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload)
+    }
+  }, [roomId, peerId])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        socket.emit('leaveRoom', { roomId, peerId })
+        socket.disconnect()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [roomId, peerId])
 
   if (isLoading)
     return (
