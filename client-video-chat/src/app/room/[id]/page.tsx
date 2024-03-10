@@ -77,6 +77,7 @@ export default function Room({ params }: { params: { id: string } }) {
     const handleDisconnect = () => {
       if (peerId) {
         socket.emit('leaveRoom', { roomId, peerId })
+        socket.disconnect()
       }
     }
 
