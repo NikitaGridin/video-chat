@@ -106,28 +106,25 @@ export default function Room({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const handleUnload = () => {
+      disconnectFromRoom()
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        disconnectFromRoom()
+      }
+    }
+
+    const disconnectFromRoom = () => {
       socket.emit('leaveRoom', { roomId, peerId })
       socket.disconnect()
     }
 
     window.addEventListener('beforeunload', handleUnload)
-
-    return () => {
-      window.removeEventListener('beforeunload', handleUnload)
-    }
-  }, [roomId, peerId])
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        socket.emit('leaveRoom', { roomId, peerId })
-        socket.disconnect()
-      }
-    }
-
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
+      window.removeEventListener('beforeunload', handleUnload)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [roomId, peerId])
