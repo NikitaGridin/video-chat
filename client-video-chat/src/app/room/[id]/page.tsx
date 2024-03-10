@@ -68,7 +68,6 @@ export default function Room({ params }: { params: { id: string } }) {
       }
       return () => {
         socket.emit('leaveRoom', { roomId, peerId })
-        socket.disconnect()
       }
     }
   }, [peerId])
@@ -105,29 +104,19 @@ export default function Room({ params }: { params: { id: string } }) {
   }, [peerInstance, users])
 
   useEffect(() => {
-    const handleUnload = () => {
-      disconnectFromRoom()
+    const handleDisconnect = (event: any) => {
+      event.preventDefault()
+      const confirmationMessage = 'Вы уверены, что хотите покинуть комнату?'
+      event.returnValue = confirmationMessage // стандарт для большинства браузеров
+      return confirmationMessage
     }
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        disconnectFromRoom()
-      }
-    }
-
-    const disconnectFromRoom = () => {
-      socket.emit('leaveRoom', { roomId, peerId })
-      socket.disconnect()
-    }
-
-    window.addEventListener('beforeunload', handleUnload)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('beforeunload', handleDisconnect)
 
     return () => {
-      window.removeEventListener('beforeunload', handleUnload)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('beforeunload', handleDisconnect)
     }
-  }, [roomId, peerId])
+  }, [peerId])
 
   if (isLoading)
     return (
@@ -135,8 +124,16 @@ export default function Room({ params }: { params: { id: string } }) {
         Loading...
       </div>
     )
-  if (isError) return <div>Something Broke!</div>
-  if (!peerId) return <div>Not Id</div>
+  if (isError)
+    return (
+      <div className="h-screen flex justify-center items-center">
+        Something Broke!
+      </div>
+    )
+  if (!peerId)
+    return (
+      <div className="h-screen flex justify-center items-center">Not Id</div>
+    )
 
   return (
     <div className="p-4 flex flex-col gap-4 items-center min-h-screen justify-center">
