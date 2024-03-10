@@ -74,17 +74,16 @@ export default function Room({ params }: { params: { id: string } }) {
   }, [peerId])
 
   useEffect(() => {
-    const handleDisconnect = () => {
+    const handleUnload = async () => {
       if (peerId) {
         socket.emit('leaveRoom', { roomId, peerId })
-        socket.disconnect()
       }
     }
 
-    window.addEventListener('beforeunload', handleDisconnect)
+    window.addEventListener('unload', handleUnload)
 
     return () => {
-      window.removeEventListener('beforeunload', handleDisconnect)
+      window.removeEventListener('unload', handleUnload)
     }
   }, [peerId])
 
