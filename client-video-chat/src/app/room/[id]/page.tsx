@@ -104,17 +104,16 @@ export default function Room({ params }: { params: { id: string } }) {
   }, [peerInstance, users])
 
   useEffect(() => {
-    const handleDisconnect = (event: any) => {
-      event.preventDefault()
-      const confirmationMessage = 'Вы уверены, что хотите покинуть комнату?'
-      event.returnValue = confirmationMessage // стандарт для большинства браузеров
-      return confirmationMessage
+    const handleDisconnect = () => {
+      if (peerId) {
+        socket.emit('leaveRoom', { roomId, peerId })
+      }
     }
 
-    window.addEventListener('beforeunload', handleDisconnect)
+    window.addEventListener('unload', handleDisconnect)
 
     return () => {
-      window.removeEventListener('beforeunload', handleDisconnect)
+      window.removeEventListener('unload', handleDisconnect)
     }
   }, [peerId])
 
