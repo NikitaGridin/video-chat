@@ -4,6 +4,20 @@ import { socket } from '@/shared/socket'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
+const constraints = {
+  video: {
+    width: { max: 320 },
+    height: { max: 240 },
+    frameRate: { max: 10 },
+    facingMode: 'user'
+  },
+  audio: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true
+  }
+}
+
 export default function Room({ params }: { params: { id: string } }) {
   const [users, setUsers] = useState<string[]>([])
   const { isError, isLoading, peerId, peerInstance } = usePeerId()
@@ -28,10 +42,9 @@ export default function Room({ params }: { params: { id: string } }) {
       socket.emit('joinRoom', { roomId, peerId })
       if (peerInstance) {
         peerInstance.on('call', async (call) => {
-          const mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true
-          })
+          const mediaStream = await navigator.mediaDevices.getUserMedia(
+            constraints
+          )
 
           if (myVideoRef.current) {
             myVideoRef.current.srcObject = mediaStream
@@ -41,7 +54,6 @@ export default function Room({ params }: { params: { id: string } }) {
           call.answer(mediaStream)
 
           call.on('stream', (remoteStream: MediaStream) => {
-            // Assuming userId is attached as metadata with the call
             const userId = call.metadata?.userId
 
             if (otherVideosRef.current[userId]) {
@@ -56,6 +68,7 @@ export default function Room({ params }: { params: { id: string } }) {
       }
       return () => {
         socket.emit('leaveRoom', { roomId, peerId })
+        socket.disconnect()
       }
     }
   }, [peerId])
@@ -77,11 +90,9 @@ export default function Room({ params }: { params: { id: string } }) {
   useEffect(() => {
     const callToAll = async () => {
       if (peerInstance && users.length > 0) {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true
-        })
-
+        const mediaStream = await navigator.mediaDevices.getUserMedia(
+          constraints
+        )
         users.forEach((userId) => {
           if (userId !== peerId) {
             const call = peerInstance.call(userId, mediaStream)
@@ -107,26 +118,25 @@ export default function Room({ params }: { params: { id: string } }) {
     callToAll()
   }, [peerInstance, users])
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading)
+    return (
+      <div className="h-screen flex justify-center items-center">
+        Loading...
+      </div>
+    )
   if (isError) return <div>Something Broke!</div>
   if (!peerId) return <div>Not Id</div>
+
   return (
-    <div className="p-4">
-      <h1>Room: {roomId}</h1>
-      <div>Users in room: {users.length}</div>
-      <button
-        onClick={() => router.replace('/')}
-        className="px-4 py-2 rounded-lg bg-gray-100 border"
-      >
-        Leave Room
-      </button>
-      <div>
+    <div className="p-4 flex flex-col gap-4 items-center min-h-screen justify-center">
+      <div className="flex flex-col gap-2 xl:flex-row">
         <video
           ref={myVideoRef}
-          width={400}
-          height={400}
-          className="rounded-lg shadow-lg border"
+          className="rounded-lg"
           muted={true}
+          style={{
+            transform: 'rotateY(180deg)'
+          }}
         />
         {users.map((userId) => {
           if (userId === peerId) return
@@ -134,13 +144,20 @@ export default function Room({ params }: { params: { id: string } }) {
             <video
               key={userId}
               ref={(video) => (otherVideosRef.current[userId] = video)}
-              width={400}
-              height={400}
-              className="rounded-lg shadow-lg border"
+              className="rounded-lg"
+              style={{
+                transform: 'rotateY(180deg)'
+              }}
             />
           )
         })}
       </div>
+      <button
+        onClick={() => router.push('/')}
+        className="px-4 py-2 rounded-lg bg-rose-500 text-white font-semibold"
+      >
+        Leave
+      </button>
     </div>
   )
 }

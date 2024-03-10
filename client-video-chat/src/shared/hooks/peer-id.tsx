@@ -10,7 +10,7 @@ export function usePeerId() {
 
   useEffect(() => {
     const loadPeer = async () => {
-      setIsLoading(true) // Устанавливаем isLoading в true при начале загрузки
+      setIsLoading(true)
 
       try {
         const { default: Peer } = await import('peerjs')
@@ -18,12 +18,11 @@ export function usePeerId() {
         setPeerInstance(peer)
         peer.on('open', (id: string) => {
           setPeerId(id)
-          setIsLoading(false) // Устанавливаем isLoading в false после успешного получения peerId
+          setIsLoading(false)
         })
       } catch (error) {
-        console.error('Error loading Peer:', error)
-        setIsError(true) // Устанавливаем isError в true при возникновении ошибки
-        setIsLoading(false) // Устанавливаем isLoading в false в случае ошибки
+        setIsError(true)
+        setIsLoading(false)
       }
     }
     loadPeer()

@@ -9,11 +9,15 @@ function App() {
   useEffect(() => {
     socket.emit('getRooms')
 
-    socket.on('roomsList', (roomsList) => {
-      console.log(roomsList)
-
+    const handleRoomsList = (roomsList: any) => {
       setRooms(roomsList)
-    })
+    }
+
+    socket.on('roomsList', handleRoomsList)
+
+    return () => {
+      socket.off('roomsList', handleRoomsList)
+    }
   }, [])
 
   const createRoom = () => {
@@ -25,7 +29,7 @@ function App() {
     <div className="p-4 space-y-4">
       <button
         onClick={createRoom}
-        className="px-4 py-2 rounded-lg bg-gray-100 border"
+        className="px-4 py-2 rounded-lg bg-black text-white"
       >
         Create Room
       </button>
@@ -37,7 +41,7 @@ function App() {
             <Link
               key={room.id}
               href={`/room/${room.id}`}
-              className="border py-2 px-4 rounded-lg shadow-md transition-all active:scale-95"
+              className="border py-2 px-4 rounded-lg shadow-md transition-all active:scale-95 block"
             >
               {room.name}
               <div>users: {room.users?.length ?? 0}</div>

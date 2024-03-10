@@ -46,9 +46,7 @@ io.on("connection", (socket) => {
     updateRoomsList(socket, rooms);
   });
 
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
-  });
+  socket.on("disconnect", () => {});
 });
 
 server.listen(PORT, () => {
